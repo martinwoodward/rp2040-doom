@@ -234,6 +234,14 @@ void I_BindVariables(void)
 }
 */
 
+void I_InitJoystick()
+{
+}
+
+void I_BindJoystickVariables()
+{
+}
+
 //
 // I_Quit
 //

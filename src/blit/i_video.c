@@ -137,6 +137,8 @@ static void I_ToggleFullScreen(void)
 void I_GetEvent(void)
 {
     //TODO
+    extern void I_32BlitInput();
+    I_32BlitInput();
 }
 
 //
@@ -150,13 +152,6 @@ void I_StartTic (void)
     }
 
     I_GetEvent();
-
-#if !NO_USE_JOYSTICK
-    if (joywait < I_GetTime())
-    {
-        I_UpdateJoystick();
-    }
-#endif
 }
 
 

@@ -2,6 +2,8 @@
 #include "32blit.hpp"
 
 extern "C" {
+#include "d_event.h"
+#include "doomkeys.h"
 #include "doom/doomstat.h"
 #include "doom/s_sound.h"
 #include "doom/f_wipe.h"
@@ -11,7 +13,11 @@ void D_Display();
 
 void I_32BlitStartRender();
 void I_32BlitEndRender(uint8_t *data, int w, int h);
+
+void I_32BlitInput();
 }
+
+static uint32_t last_button_state = 0;
 
 static void add_appended_files()
 {
@@ -39,7 +45,47 @@ static void add_appended_files()
 #endif
 }
 
-bool init_wait = true, done_init = false;
+// input event generation
+static void CheckButton(uint32_t changed_buttons, blit::Button button, int key)
+{
+	event_t event;
+	if(changed_buttons & button)
+	{
+		event.type = (blit::buttons & button) ? ev_keydown : ev_keyup;
+		event.data1 = key;
+		D_PostEvent(&event);
+	}
+}
+
+void I_32BlitInput()
+{
+	event_t event = {};
+
+	uint32_t changed_buttons = blit::buttons ^ last_button_state;
+
+	CheckButton(changed_buttons, blit::Button::DPAD_LEFT, KEY_LEFTARROW);
+	CheckButton(changed_buttons, blit::Button::DPAD_RIGHT, KEY_RIGHTARROW);
+	CheckButton(changed_buttons, blit::Button::DPAD_UP, KEY_UPARROW);
+	CheckButton(changed_buttons, blit::Button::DPAD_DOWN, KEY_DOWNARROW);
+
+	CheckButton(changed_buttons, blit::Button::A, KEY_ENTER);
+	CheckButton(changed_buttons, blit::Button::A, KEY_RCTRL); // bad idea?
+	CheckButton(changed_buttons, blit::Button::B, ' ');
+	CheckButton(changed_buttons, blit::Button::X, KEY_RSHIFT);
+	CheckButton(changed_buttons, blit::Button::Y, KEY_TAB);
+
+	CheckButton(changed_buttons, blit::Button::MENU, KEY_ESCAPE);
+
+	last_button_state = blit::buttons;
+
+	event.type = ev_joystick;
+	event.data1 = 0; //buttons?
+	event.data2 = blit::joystick.x * (INT16_MAX - 1);
+	event.data3 = blit::joystick.y * (INT16_MAX - 1);
+	D_PostEvent(&event);
+}
+
+static bool done_init = false;
 
 void init()
 {

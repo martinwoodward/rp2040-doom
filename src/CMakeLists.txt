@@ -345,7 +345,6 @@ target_compile_definitions(small_doom_common INTERFACE
         NO_USE_RELOAD=1
         USE_SINGLE_IWAD=1
         NO_USE_WIPE=1 #memory if nothing else - we can fix this (you can do it)
-        NO_USE_JOYSTICK=1
         NO_USE_DEH=1
         NO_USE_MUSIC_PACKS=1
 
@@ -468,6 +467,12 @@ target_compile_definitions(small_doom_common INTERFACE
         PICO_DEBUG_PIN_BASE=18
         PICO_DEBUG_PIN_COUNT=2
 )
+
+if(PICO_SDK)
+    target_compile_definitions(small_doom_common INTERFACE
+        NO_USE_JOYSTICK=1
+    )
+endif()
 
 target_compile_options(small_doom_common INTERFACE
         -Wall
