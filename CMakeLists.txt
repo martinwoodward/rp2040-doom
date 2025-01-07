@@ -24,6 +24,11 @@ if (PICO_SDK_PATH)
     endif()
 endif()
 
+if (32BLIT_DIR)
+    find_package (32BLIT CONFIG REQUIRED PATHS ../32blit-sdk)
+    set(32BLIT_SDK 1)
+endif()
+
 set(CMAKE_C_STANDARD 11)
 
 # Autotools variables
@@ -52,7 +57,7 @@ else()
 endif()
 
 # Note PICO_SDK path is set by the SDK initialization if it occurs above
-if (NOT PICO_SDK)
+if (NOT PICO_SDK AND NOT 32BLIT_SDK)
     find_package(SDL2 2.0.1 REQUIRED)
     find_package(SDL2_mixer 2.0.0 REQUIRED)
     find_package(SDL2_net 2.0.0 REQUIRED)

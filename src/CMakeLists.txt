@@ -1,4 +1,4 @@
-if (PICO_SDK)
+if (PICO_SDK OR 32BLIT_SDK)
     set(BINARIES doom)
 else()
     # comment out heretic/hexen/strife for now, as whilst they may build, how well they work is unclear
@@ -15,15 +15,16 @@ endforeach()
 # Common source files used by absolutely everything:
 cmake_policy(SET CMP0076 NEW)
 
-if (NOT PICO_SDK)
-    set(I_PLATFORM sdl)
-else()
+if (32BLIT_SDK)
+    set(I_PLATFORM 32blit)
+else(if (PICO_SDK)
     set(I_PLATFORM pico)
+else)
+    set(I_PLATFORM sdl)
 endif()
 
 add_library(common INTERFACE)
 target_sources(common INTERFACE
-    i_main.c
     i_system.h
     m_argv.c             m_argv.h
     m_misc.c             m_misc.h)
@@ -34,19 +35,25 @@ target_compile_definitions(common INTERFACE
 #        DEBUG_MOBJ=1
 )
 
-if (NOT PICO_SDK)
+if (NOT 32BLIT_SDK)
+    target_sources(common INTERFACE i_main.c)
+endif()
+
+if (32BLIT_SDK)
+    add_subdirectory(blit)
+elseif (PICO_SDK)
+    add_subdirectory(pico)
+else()
     add_library(common_sdl INTERFACE)
     target_sources(common_sdl INTERFACE
             i_system.c
     )
-else()
-    add_subdirectory(pico)
 endif()
 
 target_link_libraries(common INTERFACE common_${I_PLATFORM})
 
 # todo chocolate-server also doesn't currently build
-if (NOT PICO_SDK)
+if (NOT PICO_SDK AND NOT 32BLIT_SDK)
     # Dedicated server (chocolate-server):
 
     set(DEDSERV_FILES
@@ -124,7 +131,15 @@ target_sources(game INTERFACE
 
 )
 
-if (NOT PICO_SDK)
+if (32BLIT_SDK)
+    add_library(game_32blit INTERFACE)
+    # probably want to set NO_DIRENT_IMPLEMENTATION
+    target_sources(game_32blit INTERFACE
+        i_glob.c
+    )
+elseif (PICO_SDK)
+    add_library(game_pico INTERFACE)
+else()
     add_library(game_sdl INTERFACE)
     target_sources(game_sdl INTERFACE
             # todo maybe a separate network library
@@ -158,8 +173,6 @@ if (NOT PICO_SDK)
             i_video.c
             i_videohr.c
         )
-else()
-    add_library(game_pico INTERFACE)
 endif()
 
 target_link_libraries(game INTERFACE game_${I_PLATFORM})
@@ -180,7 +193,7 @@ target_sources(game_deh INTERFACE
 
 target_link_libraries(game_deh INTERFACE game)
 
-if (NOT PICO_SDK)
+if (NOT PICO_SDK AND NOT 32BLIT_SDK)
     set(EXTRA_LIBS SDL2::SDL2main SDL2::SDL2 SDL2::mixer SDL2::net textscreen pcsound)
     if(SAMPLERATE_FOUND)
         list(APPEND EXTRA_LIBS samplerate::samplerate)
@@ -470,8 +483,12 @@ if (TARGET chocolate-doom)
 endif()
 
 function(add_doom_tiny SUFFIX RENDER_LIB)
-    add_executable(doom_tiny${SUFFIX})
-    target_link_libraries(doom_tiny${SUFFIX} PRIVATE game)
+    if(32BLIT_SDK)
+        blit_executable(doom_tiny${SUFFIX})
+    else()
+        add_executable(doom_tiny${SUFFIX})
+    endif()
+    target_link_libraries(doom_tiny${SUFFIX} game)
 
     target_sources(doom_tiny${SUFFIX} PRIVATE
             tiny_huff.c
@@ -479,9 +496,9 @@ function(add_doom_tiny SUFFIX RENDER_LIB)
             image_decoder.c
             )
     target_include_directories(doom_tiny${SUFFIX} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/../")
-    target_link_libraries(doom_tiny${SUFFIX} PRIVATE doom ${EXTRA_LIBS})
+    target_link_libraries(doom_tiny${SUFFIX} doom ${EXTRA_LIBS})
 
-    target_link_libraries(doom_tiny${SUFFIX} PRIVATE small_doom_common)
+    target_link_libraries(doom_tiny${SUFFIX} small_doom_common)
 
     if (PICO_SDK)
         pico_set_float_implementation(doom_tiny${SUFFIX} none)
@@ -499,26 +516,15 @@ function(add_doom_tiny SUFFIX RENDER_LIB)
         NO_RDRAW=1
 
         #NO_DRAW_MENU=1
-        # SDK minimilization
-        PICO_TIME_DEFAULT_ALARM_POOL_DISABLED=1
-        PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS=1
-        PICO_DISABLE_SHARED_IRQ_HANDLERS=1
-        PICO_USE_OPTIMISTIC_SBRK=1
 
         # MUSIC
         USE_EMU8950_OPL=1
         USE_DIRECT_MIDI_LUMP=1
 
         NO_USE_NET=1 # standard networking
-        USE_PICO_NET=1
-        # for vgaboard
-        PICO_DEFAULT_I2C=1
-        PICO_DEFAULT_I2C_SDA_PIN=18
-        PICO_DEFAULT_I2C_SCL_PIN=19
 
         #NO_USE_LOAD=1
         #NO_USE_SAVE=1
-        $<$<BOOL:${PICO_ON_DEVICE}>:NO_FILE_ACCESS=1>
 
         SAVE_COMPRESSED=1
         LOAD_COMPRESSED=1
@@ -563,13 +569,31 @@ function(add_doom_tiny SUFFIX RENDER_LIB)
     target_compile_definitions(doom_tiny${SUFFIX} PRIVATE
         #FORCE_NODRAW=1
         USE_MEMORY_WAD=1
-        PICO_DEBUG_MALLOC=1
-        EMU8950_NO_RATECONV=1
 
-        PICO_CORE1_STACK_SIZE=0x4f8
+        EMU8950_NO_RATECONV=1
 
         NO_IERROR=1
     )
+    if (PICO_SDK)
+        target_compile_definitions(doom_tiny${SUFFIX} PRIVATE
+            # SDK minimilization
+            PICO_TIME_DEFAULT_ALARM_POOL_DISABLED=1
+            PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS=1
+            PICO_DISABLE_SHARED_IRQ_HANDLERS=1
+            PICO_USE_OPTIMISTIC_SBRK=1
+            
+            USE_PICO_NET=1
+            # for vgaboard
+            PICO_DEFAULT_I2C=1
+            PICO_DEFAULT_I2C_SDA_PIN=18
+            PICO_DEFAULT_I2C_SCL_PIN=19
+
+            $<$<BOOL:${PICO_ON_DEVICE}>:NO_FILE_ACCESS=1>
+
+            PICO_DEBUG_MALLOC=1
+            PICO_CORE1_STACK_SIZE=0x4f8
+        )
+    endif()
     if (PICO_ON_DEVICE)
         target_compile_options(doom_tiny${SUFFIX} PRIVATE -fno-common -fdata-sections -Wl,--sort-section=alignment)
         target_compile_definitions(doom_tiny${SUFFIX} PRIVATE
@@ -580,7 +604,7 @@ function(add_doom_tiny SUFFIX RENDER_LIB)
     if (FORCE_DEBUG)
         target_compile_options(doom_tiny${SUFFIX} PRIVATE -g)
     endif()
-    target_link_libraries(doom_tiny${SUFFIX} PRIVATE ${RENDER_LIB})
+    target_link_libraries(doom_tiny${SUFFIX} ${RENDER_LIB})
     set(PICO_HACK 0)
     set(STAMP_HACK 0)
     if (PICO_HACK)
@@ -624,6 +648,10 @@ else()
     target_compile_definitions(render_newhope INTERFACE
             PICO_SCANVIDEO_MAX_SCANLINE_BUFFER_WORDS=324
     )
+endif()
+
+if (32BLIT_SDK)
+    add_doom_tiny("" render_newhope)
 endif()
 
 if (PICO_SDK)

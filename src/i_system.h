@@ -66,7 +66,7 @@ void I_Error (const char *error, ...) NORETURN PRINTF_ATTR(1, 2);
 #define I_Error(args...) __breakpoint();
 #endif
 
-#if DOOM_TINY
+#if DOOM_TINY && defined(PICO_BUILD)
 #include "pico/sem.h"
 extern semaphore_t render_frame_ready, display_frame_freed;
 #endif

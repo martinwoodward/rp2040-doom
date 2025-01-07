@@ -47,6 +47,11 @@ static_assert(VPATCH_NAME_INVALID == 0, "");
 //static_assert(NUM_VPATCHES < 256, "");
 // ^ note we have relaxed this because we are close... to allowing for sequential patches (just added to the base) to extend beyond our vpatch_small_t size which is one byte
 static_assert(VPATCH_STCFN033 < 256, "");
+
+#ifndef PICO_BUILD
+#define panic_unsupported() abort()
+#endif
+
 #endif
 
 #include "config.h"

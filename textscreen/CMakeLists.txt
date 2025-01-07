@@ -1,4 +1,4 @@
-if (PICO_SDK)
+if (PICO_SDK OR 32BLIT_SDK)
     add_library(textscreen INTERFACE)
 else()
     add_library(textscreen

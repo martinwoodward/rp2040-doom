@@ -1203,7 +1203,7 @@ void M_DrawOptions(void)
     V_DrawPatchDirect(OptionsDef.x + 175, OptionsDef.y + LINEHEIGHT * detail,
 		      W_CacheLumpName(DEH_String(detailNames[detailLevel]),
 			              PU_CACHE));
-#else
+#elif NET_MENU
     // "Game" for Network
     V_DrawPatchDirect(OptionsDef.x + 105, OptionsDef.y + LINEHEIGHT * networkgame,
                       VPATCH_HANDLE(VPATCH_NAME(M_GAME)));

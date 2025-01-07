@@ -21,6 +21,7 @@
 
 
 #include <math.h>
+#include <stddef.h>
 
 #include "z_zone.h"
 

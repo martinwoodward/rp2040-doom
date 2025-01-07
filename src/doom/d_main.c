@@ -565,6 +565,8 @@ void D_DoomLoop (void)
         wipegamestate = gamestate;
     }
 
+#ifndef BUILD_32BLIT // SDK-controlled main loop
+
     while (1)
     {
         D_RunFrame();
@@ -575,6 +577,7 @@ void D_DoomLoop (void)
         }
 #endif
     }
+#endif
 }
 
 

@@ -332,7 +332,7 @@ Z_MallocNoUser
         if (rover == start)
         {
             // scanned all the way around the list
-#if DOOM_TINY
+#if DOOM_TINY && defined(PICO_BUILD)
             panic("out of memory");
 #else
             I_Error ("Z_Malloc: failed on allocation of %i bytes", size);

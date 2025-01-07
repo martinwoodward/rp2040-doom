@@ -21,7 +21,7 @@
 #ifndef __I_SWAP__
 #define __I_SWAP__
 
-#if !PICO_ON_DEVICE
+#if !PICO_ON_DEVICE && !defined(BUILD_32BLIT)/*FIXME: only hw?*/
 #include "SDL_endian.h"
 #else
 #define SDL_SwapLE16(x) (x)

@@ -53,7 +53,8 @@ static const opl_driver_t *drivers[] =
 #ifdef _WIN32
                 &opl_win32_driver,
 #endif
-#if PICO_BUILD
+#ifdef BUILD_32BLIT
+#elif PICO_BUILD
                 &opl_pico_driver,
 #else
                 &opl_sdl_driver,

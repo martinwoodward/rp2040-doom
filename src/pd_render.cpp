@@ -8,9 +8,11 @@
 // chicanery we'll need from the final version
 
 #include "picodoom.h"
+#ifdef PICO_BUILD
 #include "pico/sem.h"
 #include "hardware/gpio.h"
 #include "pico/divider.h"
+#endif
 #include "image_decoder.h"
 #include <set>
 extern "C" {

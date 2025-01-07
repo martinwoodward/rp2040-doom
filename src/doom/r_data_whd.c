@@ -39,6 +39,10 @@
 #include "r_data.h"
 #include <assert.h>
 
+#ifndef PICO_BUILD
+#define hard_assert assert
+#endif
+
 //
 // Graphics.
 // DOOM graphics for walls and sprites

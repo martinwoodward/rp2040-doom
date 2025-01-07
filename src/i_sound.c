@@ -123,7 +123,9 @@ static int snd_mport = 0;
 
 static sound_module_t *sound_modules[] =
 {
-#if PICO_BUILD
+#ifdef BUILD_32BLIT
+    //TODO
+#elif PICO_BUILD
     &sound_pico_module,
 #else
     &sound_sdl_module,
@@ -136,7 +138,7 @@ static sound_module_t *sound_modules[] =
 
 static const music_module_t *music_modules[] =
 {
-#if !PICO_BUILD
+#if !PICO_BUILD && !defined(BUILD_32BLIT)
     &music_sdl_module,
 #endif
     &music_opl_module,

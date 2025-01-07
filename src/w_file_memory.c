@@ -22,6 +22,7 @@
 
 #include <string.h>
 
+#include "i_system.h"
 #include "m_misc.h"
 #include "w_file.h"
 #include "z_zone.h"
