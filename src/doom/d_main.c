@@ -79,7 +79,7 @@
 #endif
 
 #include "d_main.h"
-#if PICO_BUILD
+#if PICO_BUILD && !defined(BUILD_32BLIT)
 #include "i_picosound.h"
 #if USB_SUPPORT
 #include "tusb.h"
@@ -1807,7 +1807,7 @@ void D_DoomMain (void)
     D_SetGameDescription();
 
 #if !NO_USE_SAVE && !NO_FILE_ACCESS
-#if DOOM_TINY && !PICO_ON_DEVICE
+#if DOOM_TINY && (!PICO_ON_DEVICE || defined(BUILD_32BLIT))
     savegamedir = "./";
 #else
     savegamedir = M_GetSaveGameDir(D_SaveGameIWADName(gamemission));

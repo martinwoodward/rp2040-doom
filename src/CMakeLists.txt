@@ -489,11 +489,20 @@ endif()
 
 function(add_doom_tiny SUFFIX RENDER_LIB)
     if(32BLIT_SDK)
-        blit_executable(doom_tiny${SUFFIX})
+        # workaround conflicting includes
+        blit_executable(doom_tiny${SUFFIX}_blit blit/stub.c)
+        add_library(doom_tiny${SUFFIX} STATIC)
+        target_link_libraries(doom_tiny${SUFFIX}_blit doom_tiny${SUFFIX})
+        target_compile_definitions(doom_tiny${SUFFIX}_blit PRIVATE DOUBLE_BUFFERED_HIRES=0)
+
+        # ... then we need to manually link pico stuff
+        if(32BLIT_PICO)
+            target_link_libraries(doom_tiny${SUFFIX} PRIVATE pico_platform pico_sync hardware_dma hardware_interp)
+        endif()
     else()
         add_executable(doom_tiny${SUFFIX})
     endif()
-    target_link_libraries(doom_tiny${SUFFIX} game)
+    target_link_libraries(doom_tiny${SUFFIX} PRIVATE game)
 
     target_sources(doom_tiny${SUFFIX} PRIVATE
             tiny_huff.c
@@ -501,9 +510,9 @@ function(add_doom_tiny SUFFIX RENDER_LIB)
             image_decoder.c
             )
     target_include_directories(doom_tiny${SUFFIX} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/../")
-    target_link_libraries(doom_tiny${SUFFIX} doom ${EXTRA_LIBS})
+    target_link_libraries(doom_tiny${SUFFIX} PRIVATE doom ${EXTRA_LIBS})
 
-    target_link_libraries(doom_tiny${SUFFIX} small_doom_common)
+    target_link_libraries(doom_tiny${SUFFIX} PRIVATE small_doom_common)
 
     if (PICO_SDK)
         pico_set_float_implementation(doom_tiny${SUFFIX} none)
@@ -609,7 +618,7 @@ function(add_doom_tiny SUFFIX RENDER_LIB)
     if (FORCE_DEBUG)
         target_compile_options(doom_tiny${SUFFIX} PRIVATE -g)
     endif()
-    target_link_libraries(doom_tiny${SUFFIX} ${RENDER_LIB})
+    target_link_libraries(doom_tiny${SUFFIX} PRIVATE ${RENDER_LIB})
     set(PICO_HACK 0)
     set(STAMP_HACK 0)
     if (PICO_HACK)
@@ -657,9 +666,7 @@ endif()
 
 if (32BLIT_SDK)
     add_doom_tiny("" render_newhope)
-endif()
-
-if (PICO_SDK)
+elseif (PICO_SDK)
     add_doom_tiny("" render_newhope)
     add_library(tiny_settings INTERFACE)
     target_compile_definitions(tiny_settings INTERFACE

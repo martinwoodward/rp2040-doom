@@ -269,6 +269,7 @@ void I_Quit (void)
 // I_Error
 //
 
+#if !PICO_ON_DEVICE
 static boolean already_quitting = false;
 
 void I_Error (const char *error, ...)
@@ -322,6 +323,7 @@ void I_Error (const char *error, ...)
 
     exit(-1);
 }
+#endif
 
 //
 // I_Realloc

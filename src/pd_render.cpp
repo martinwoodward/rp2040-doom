@@ -2605,7 +2605,7 @@ void pd_end_frame(int wipe_start) {
 #endif
     // these were only clipped as they were inserted (so may be more obscured)
     reclip_fuzz_columns();
-#if PICO_ON_DEVICE
+#if PICO_ON_DEVICE && !defined(BUILD_32BLIT)
 //    gpio_put(22, 1);
     while (!sem_available(&display_frame_freed)) {
         I_UpdateSound();
@@ -2988,7 +2988,7 @@ void pd_core1_loop() {
     sem_release(&core1_done);
 }
 
-#if PICO_ON_DEVICE
+#if PICO_ON_DEVICE && !defined(BUILD_32BLIT)
 extern "C" {
 #include "i_picosound.h"
 }

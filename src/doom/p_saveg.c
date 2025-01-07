@@ -2636,7 +2636,7 @@ void P_UnArchiveSpecials (void)
 
 }
 
-#if PICO_ON_DEVICE
+#if PICO_ON_DEVICE && !defined(BUILD_32BLIT)
 #include "w_wad.h"
 #include "picoflash.h"
 #include "hardware/sync.h"

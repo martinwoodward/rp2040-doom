@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if PICO_BUILD
+#if PICO_BUILD && !defined(BUILD_32BLIT)
 #include "i_picosound.h"
 #endif
 

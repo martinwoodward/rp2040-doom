@@ -34,7 +34,7 @@
 #define panic I_Error
 #endif
 
-#if PICO_ON_DEVICE
+#if PICO_ON_DEVICE && !defined(BUILD_32BLIT)
 #ifndef TINY_WAD_ADDR
 #error TINY_WAD_ADDR must be specified
 #endif
@@ -51,7 +51,7 @@ bi_decl(bi_program_feature(ADDR_FNAME));
 #if !USE_WHD
 #error no longer supported
 #else
-#if !PICO_ON_DEVICE
+#if !PICO_ON_DEVICE || defined(BUILD_32BLIT) // TODO
 #include "tiny.whd.h"
 #define wad_map_base tiny_whd
 #endif
@@ -83,7 +83,7 @@ static wad_file_t *W_Memory_OpenFile(const char *path)
     }
 #else
     if (fileo.mapped[0] != 'I' || fileo.mapped[1] != 'W' || fileo.mapped[2] != 'H' || fileo.mapped[3] != 'D') {
-#if PICO_ON_DEVICE
+#if PICO_ON_DEVICE && !defined(BUILD_32BLIT)
         panic("No WHD at %p\n", TINY_WAD_ADDR);
 #else
         panic("Expected WHD format");

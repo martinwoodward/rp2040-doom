@@ -12,7 +12,10 @@ project("Chocolate Doom" VERSION 3.0.0 LANGUAGES C CXX)
 enable_language(CXX)
 set(CMAKE_CXX_STANDARD 14)
 
-if (PICO_SDK_PATH)
+if (32BLIT_DIR)
+    find_package (32BLIT CONFIG REQUIRED PATHS ../32blit-sdk)
+    set(32BLIT_SDK 1)
+elseif (PICO_SDK_PATH)
     # we are using git@github.com:liamfraser/tinyusb.git as it has some RP2040 fixes that aren't upstreamed yet
     #set(PICO_TINYUSB_PATH ${CMAKE_CURRENT_LIST_DIR}/3rdparty/tinyusb)
     # this only affects device builds device, but we want to use zone for malloc in this case so we don't have two separate elastic spaces and can fit more in
@@ -22,11 +25,6 @@ if (PICO_SDK_PATH)
         message(WARNING "You should do a MinSizeRel build when targeting the RP2040
         (with -DCMAKE_BUILD_TYPE=MinSizeRel)")
     endif()
-endif()
-
-if (32BLIT_DIR)
-    find_package (32BLIT CONFIG REQUIRED PATHS ../32blit-sdk)
-    set(32BLIT_SDK 1)
 endif()
 
 set(CMAKE_C_STANDARD 11)

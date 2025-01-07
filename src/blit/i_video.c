@@ -44,6 +44,10 @@
 #include "w_wad.h"
 #include "z_zone.h"
 
+#if PICO_ON_DEVICE
+#include "hardware/dma.h"
+#include "hardware/structs/xip.h"
+#endif
 
 // palette
 static uint16_t palette[256];
@@ -98,7 +102,11 @@ uint8_t display_frame_index;
 uint8_t display_overlay_index;
 uint8_t display_video_type;
 
+semaphore_t render_frame_ready, display_frame_freed;
+
 static const patch_t *stbar;
+
+volatile uint8_t interp_in_use;
 
 void I_SetGrabMouseCallback(grabmouse_callback_t func)
 {
