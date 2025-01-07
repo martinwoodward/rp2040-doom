@@ -139,8 +139,12 @@ opl_init_result_t OPL_Init(unsigned int port_base)
 {
 #if PICO_BUILD
     driver = drivers[0];
-    driver->init_func(0);
-    return OPL_INIT_OPL2;
+    if(driver)
+    {
+        driver->init_func(0);
+        return OPL_INIT_OPL2;
+    }
+    return OPL_INIT_NONE;
 #else
     char *driver_name;
     int i;

@@ -251,6 +251,9 @@ void I_InitGraphics(void)
 
     stbar = resolve_vpatch_handle(VPATCH_STBAR);
 
+    sem_init(&render_frame_ready, 0, 2);
+    sem_init(&display_frame_freed, 1, 2);
+
     pd_init();
 
     // Set the palette
@@ -387,6 +390,8 @@ void I_32BlitStartRender()
     // palette init
     if (display_video_type != VIDEO_TYPE_SAVING)
         new_frame_init_overlays_palette_and_wipe();
+
+    sem_release(&display_frame_freed);
 }
 
 static inline unsigned draw_vpatch(uint16_t *dest, patch_t *patch, vpatchlist_t *vp, unsigned off) {

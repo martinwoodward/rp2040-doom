@@ -32,12 +32,14 @@ extern "C" {
 #include "v_video.h"
 #include "i_video.h"
 }
+
 // todo compare with and without
 #define USE_XIPCPY 0
-#if PICO_ON_DEVICE
+#if PICO_ON_DEVICE && !defined(BUILD_32BLIT) // TODO
 #define USE_CORE1_FOR_FLATS 1
-#endif
 #define USE_CORE1_FOR_REGULAR 1
+#endif
+
 #ifdef PICO_SPINLOCK_ID_OS2
 #define RENDER_SPIN_LOCK PICO_SPINLOCK_ID_OS2
 #else
@@ -2795,7 +2797,9 @@ void pd_end_frame(int wipe_start) {
     }
 #endif
     sem_release(&core0_done);
+#ifndef BUILD_32BLIT // TODO: we're not running core1, so this is going to hang
     sem_acquire_blocking(&core1_done);
+#endif
     draw_fuzz_columns();
     DEBUG_PINS_CLR(full_render, 1);
     NetUpdate();
