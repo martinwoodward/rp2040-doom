@@ -4,6 +4,7 @@
 extern "C" {
 #include "doom/doomstat.h"
 #include "doom/s_sound.h"
+#include "doom/f_wipe.h"
 
 void D_DoomMain();
 void D_Display();
@@ -59,6 +60,9 @@ void update(uint32_t time)
     if(blit::now() - time > 20)
         return;
 
+    if(wipestate)
+        return;
+
     TryRunTics();
 	S_UpdateSounds(players[consoleplayer].mo);
 }
@@ -72,7 +76,7 @@ void render(uint32_t time)
 
     I_32BlitStartRender();
 
-    D_Display(); // do {} while(wipestate);
+    D_Display();
 
     I_32BlitEndRender(screen.data, screen.bounds.w, screen.bounds.h);
 }

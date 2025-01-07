@@ -47,6 +47,7 @@
 
 // palette
 static uint16_t palette[256];
+static uint16_t shared_pal[NUM_SHARED_PALETTES][16];
 static int8_t next_pal=-1;
 
 // display has been set up?
@@ -336,7 +337,7 @@ void __noinline new_frame_init_overlays_palette_and_wipe() {
                 assert(vpatch_colorcount(patch) <= 16);
                 assert(vpatch_has_shared_palette(patch));
                 for (int j = 0; j < 16; j++) {
-                    //shared_pal[i][j] = palette[vpatch_palette(patch)[j]];
+                    shared_pal[i][j] = palette[vpatch_palette(patch)[j]];
                 }
             }
         }
@@ -383,6 +384,241 @@ void I_32BlitStartRender()
     // palette init
     if (display_video_type != VIDEO_TYPE_SAVING)
         new_frame_init_overlays_palette_and_wipe();
+}
+
+static inline unsigned draw_vpatch(uint16_t *dest, patch_t *patch, vpatchlist_t *vp, unsigned off) {
+    int repeat = vp->entry.repeat;
+    dest += vp->entry.x;
+    int w = vpatch_width(patch);
+    const uint8_t *data0 = vpatch_data(patch);
+    const uint8_t *data = data0 + off;
+    if (!vpatch_has_shared_palette(patch)) {
+        const uint8_t *pal = vpatch_palette(patch);
+        switch (vpatch_type(patch)) {
+            case vp4_runs: {
+                uint16_t *p = dest;
+                uint16_t *pend = dest + w;
+                uint8_t gap;
+                while (0xff != (gap = *data++)) {
+                    p += gap;
+                    int len = *data++;
+                    for (int i = 1; i < len; i += 2) {
+                        unsigned v = *data++;
+                        *p++ = palette[pal[v & 0xf]];
+                        *p++ = palette[pal[v >> 4]];
+                    }
+                    if (len & 1) {
+                        *p++ = palette[pal[(*data++) & 0xf]];
+                    }
+                    assert(p <= pend);
+                    if (p == pend) break;
+                }
+                break;
+            }
+            case vp4_alpha: {
+                uint16_t *p = dest;
+                for (int i = 0; i < w / 2; i++) {
+                    unsigned v = *data++;
+                    if (v & 0xf) p[0] = palette[pal[v & 0xf]];
+                    if (v >> 4) p[1] = palette[pal[v >> 4]];
+                    p += 2;
+                }
+                if (w & 1) {
+                    unsigned v = *data++;
+                    if (v & 0xf) p[0] = palette[pal[v & 0xf]];
+                }
+                break;
+            }
+            case vp4_solid: {
+                uint16_t *p = dest;
+                for (int i = 0; i < w / 2; i++) {
+                    unsigned v = *data++;
+                    p[0] = palette[pal[v & 0xf]];
+                    p[1] = palette[pal[v >> 4]];
+                    p += 2;
+                }
+                if (w & 1) {
+                    unsigned v = *data++;
+                    p[0] = palette[pal[v & 0xf]];
+                }
+                break;
+            }
+            case vp6_runs: {
+                uint16_t *p = dest;
+                uint16_t *pend = dest + w;
+                uint8_t gap;
+                while (0xff != (gap = *data++)) {
+                    p += gap;
+                    int len = *data++;
+                    for (int i = 3; i < len; i += 4) {
+                        unsigned v = *data++;
+                        v |= (*data++) << 8;
+                        v |= (*data++) << 16;
+                        *p++ = palette[pal[v & 0x3f]];
+                        *p++ = palette[pal[(v >> 6) & 0x3f]];
+                        *p++ = palette[pal[(v >> 12) & 0x3f]];
+                        *p++ = palette[pal[(v >> 18) & 0x3f]];
+                    }
+                    len &= 3;
+                    if (len--) {
+                        unsigned v = *data++;
+                        *p++ = palette[pal[v & 0x3f]];
+                        if (len--) {
+                            v >>= 6;
+                            v |= (*data++) << 2;
+                            *p++ = palette[pal[v & 0x3f]];
+                            if (len--) {
+                                v >>= 6;
+                                v |= (*data++) << 4;
+                                *p++ = palette[pal[v & 0x3f]];
+                                assert(!len);
+                            }
+                        }
+                    }
+                    assert(p <= pend);
+                    if (p == pend) break;
+                }
+                break;
+            }
+            case vp8_runs: {
+                uint16_t *p = dest;
+                uint16_t *pend = dest + w;
+                uint8_t gap;
+                while (0xff != (gap = *data++)) {
+                    p += gap;
+                    int len = *data++;
+                    for (int i = 0; i < len; i++) {
+                        *p++ = palette[pal[*data++]];
+                    }
+                    assert(p <= pend);
+                    if (p == pend) break;
+                }
+                break;
+            }
+            case vp_border: {
+                dest[0] = palette[*data++];
+                uint16_t col = palette[*data++];
+                for (int i = 1; i < w - 1; i++) dest[i] = col;
+                dest[w-1] = palette[*data++];
+                break;
+            }
+            default:
+                assert(false);
+                break;
+        }
+    } else {
+        unsigned sp = vpatch_shared_palette(patch);
+        uint16_t *pal16 = shared_pal[sp];
+        assert(sp < NUM_SHARED_PALETTES);
+        switch (vpatch_type(patch)) {
+            case vp4_solid: {
+#if PICO_ON_DEVICE
+                if (patch == stbar) {
+                    static const uint8_t *cached_data;
+#if PICO_RP2040
+                    static uint32_t __scratch_x("data_cache") data_cache[41];
+#else
+                    // short of scratch space on RP2350 for some reason, so lets put this in main RAM
+                    static uint32_t data_cache[41];
+#endif
+                    int i = 0;
+                    uint32_t *d = (uint32_t *) dest;
+#define DMA_CHANNEL 11
+                    if (cached_data == data) {
+                        const uint8_t *source = (const uint8_t *) data_cache;
+                        // we need to correct for the misalignment of data, because the XIP copy ignores the low 2 bits...
+                        // the raw bitmap data is always misaligned by 3 (the size of the header in the case of stbar)
+                        source += 3;
+                        for (; source < (const uint8_t *) dma_hw->ch[DMA_CHANNEL].al1_write_addr; source++) {
+                            uint32_t val = pal16[source[0] & 0xf];
+                            val |= (pal16[source[0] >> 4]) << 16;
+                            *d++ = val;
+                        }
+                        source -= 3;
+                        i = (source - (const uint8_t *) data_cache);
+                    }
+                    if (true) {
+                        //                        once = true;
+                        xip_ctrl_hw->stream_ctr = 0;
+                        // workaround yucky bug
+#if !PICO_RP2350
+                        (void) *(io_rw_32 *) XIP_NOCACHE_NOALLOC_BASE;
+                        xip_ctrl_hw->stream_fifo;
+#endif
+                        dma_channel_abort(DMA_CHANNEL);
+                        dma_channel_config c = dma_channel_get_default_config(DMA_CHANNEL);
+                        channel_config_set_read_increment(&c, false);
+                        channel_config_set_write_increment(&c, true);
+                        channel_config_set_dreq(&c, DREQ_XIP_STREAM);
+#if !PICO_RP2350
+                        dma_channel_set_read_addr(DMA_CHANNEL, (void *) XIP_AUX_BASE, false);
+#else
+                        dma_channel_set_read_addr(DMA_CHANNEL, &xip_ctrl_hw->stream_fifo, false);
+#endif
+                        dma_channel_set_config(DMA_CHANNEL, &c, false);
+                        cached_data = data + SCREENWIDTH / 2;
+                        xip_ctrl_hw->stream_addr = (uintptr_t) cached_data;
+                        xip_ctrl_hw->stream_ctr = 41;
+                        __compiler_memory_barrier();
+                        dma_channel_transfer_to_buffer_now(DMA_CHANNEL, data_cache, 41);
+                    }
+                    for (; i < SCREENWIDTH / 2; i++) {
+                        uint32_t val = pal16[data[i] & 0xf];
+                        val |= (pal16[data[i] >> 4]) << 16;
+                        *d++ = val;
+                    }
+                    data += SCREENWIDTH / 2;
+                    break; // early break from switch
+                }
+#endif
+                if (((uintptr_t)dest)&3) {
+                    uint16_t *p = dest;
+                    for (int i = 0; i < w / 2; i++) {
+                        unsigned v = *data++;
+                        p[0] = pal16[v & 0xf];
+                        p[1] = pal16[v >> 4];
+                        p += 2;
+                    }
+                } else {
+                    uint32_t *wide = (uint32_t *) dest;
+                    for (int i = 0; i < w / 2; i++) {
+                        unsigned v = *data++;
+                        wide[i] = pal16[v & 0xf] | (pal16[v >> 4] << 16);
+                    }
+                }
+                if (w & 1) {
+                    unsigned v = *data++;
+                    dest[w-1] = pal16[v & 0xf];
+                }
+                break;
+            }
+            case vp4_alpha: {
+                uint16_t *p = dest;
+                for (int i = 0; i < w / 2; i++) {
+                    unsigned v = *data++;
+                    if (v & 0xf) p[0] = pal16[v & 0xf];
+                    if (v >> 4) p[1] = pal16[v >> 4];
+                    p += 2;
+                }
+                if (w & 1) {
+                    unsigned v = *data++;
+                    if (v & 0xf) p[0] = pal16[v & 0xf];
+                }
+                break;
+            }
+            default:
+                assert(false);
+        }
+    }
+    if (repeat) {
+        // we need them to be solid... which they are, but if not you'll just get some visual funk
+        //assert(vpatch_type(patch) == vp4_solid);
+        if (vp->entry.patch_handle == VPATCH_M_THERMM) w--; // hackity hack
+        for(int i=0;i<repeat*w;i++) {
+            dest[w+i] = dest[i];
+        }
+    }
+    return data - data0;
 }
 
 static void DrawLine(int line, uint8_t *ptr)
@@ -456,7 +692,36 @@ static void DrawLine(int line, uint8_t *ptr)
         }
     }
 
-
+    // vpatch
+    if (display_video_type >= FIRST_VIDEO_TYPE_WITH_OVERLAYS) {
+        assert(line < count_of(vpatchlists->vpatch_starters));
+        int prev = 0;
+        for (int vp = vpatchlists->vpatch_starters[line]; vp;) {
+            int next = vpatchlists->vpatch_next[vp];
+            while (vpatchlists->vpatch_next[prev] && vpatchlists->vpatch_next[prev] < vp) {
+                prev = vpatchlists->vpatch_next[prev];
+            }
+            assert(prev != vp);
+            assert(vpatchlists->vpatch_next[prev] != vp);
+            vpatchlists->vpatch_next[vp] = vpatchlists->vpatch_next[prev];
+            vpatchlists->vpatch_next[prev] = vp;
+            prev = vp;
+            vp = next;
+        }
+        vpatchlist_t *overlays = vpatchlists->overlays[display_overlay_index];
+        prev = 0;
+        for (int vp = vpatchlists->vpatch_next[prev]; vp; vp = vpatchlists->vpatch_next[prev]) {
+            patch_t *patch = resolve_vpatch_handle(overlays[vp].entry.patch_handle);
+            int yoff = line - overlays[vp].entry.y;
+            if (yoff < vpatch_height(patch)) {
+                vpatchlists->vpatch_doff[vp] = draw_vpatch(ptr16, patch, &overlays[vp],
+                                                            vpatchlists->vpatch_doff[vp]);
+                prev = vp;
+            } else {
+                vpatchlists->vpatch_next[prev] = vpatchlists->vpatch_next[vp];
+            }
+        }
+    }
 }
 
 void I_32BlitEndRender(uint8_t *data, int w, int h)
