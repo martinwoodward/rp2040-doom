@@ -629,6 +629,19 @@ static inline unsigned draw_vpatch(uint16_t *dest, patch_t *patch, vpatchlist_t 
     return data - data0;
 }
 
+static inline void ConvertPixels(uint8_t *in, uint16_t *out, int count)
+{
+    // assume multiple of two and non-zero count
+    uint32_t *out32 = (uint32_t *)out;
+    uint32_t *end = (uint32_t *)(out + count);
+    do
+    {
+        *out32++ = palette[*in] | palette[*(in + 1)] << 16;
+        in += 2;
+    }
+    while(out32 != end);
+}
+
 static void DrawLine(int line, uint8_t *ptr)
 {
     // assume 565
@@ -642,8 +655,7 @@ static void DrawLine(int line, uint8_t *ptr)
             {
                 uint8_t *in_ptr = frame_buffer[display_frame_index] + line * SCREENWIDTH;
 
-                for(int x = 0; x < SCREENWIDTH; x++)
-                    *ptr16++ = palette[*in_ptr++];
+                ConvertPixels(in_ptr, ptr16, SCREENWIDTH);
             }
             break;
         }
@@ -666,8 +678,7 @@ static void DrawLine(int line, uint8_t *ptr)
             }
 #endif
 
-            for(int x = 0; x < SCREENWIDTH; x++)
-                *ptr16++ = palette[*in_ptr++];
+            ConvertPixels(in_ptr, ptr16, SCREENWIDTH);
             break;
         }
 
