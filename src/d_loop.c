@@ -668,6 +668,12 @@ void TryRunTics(void) {
             }
 
             I_Sleep(1);
+#ifdef BUILD_32BLIT
+            // go back to blit main loop instead of spinning here
+            // unless this is the first tic, that can cause crashiness
+            if(lowtic)
+                return;
+#endif
         }
     }
 
