@@ -411,7 +411,7 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     // on the keyboard and joystick
     if (is_gamekeydown(key_right)
             || is_gamekeydown(key_left)
-#if !NO_USE_JOYSTICK
+#if !NO_USE_JOYSTICK && !USE_ANALOG_JOYSTICK
             || joyxmove < 0
 	        || joyxmove > 0
 #endif
@@ -438,7 +438,9 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
 	    //	fprintf(stderr, "strafe left\n");
 	    side -= sidemove[speed]; 
 	}
-#if !NO_USE_JOYSTICK
+#if  USE_ANALOG_JOYSTICK
+    side += (joyxmove * sidemove[1]) / 0x8000;
+#elif !NO_USE_JOYSTICK
 	if (joyxmove > 0) 
 	    side += sidemove[speed]; 
 	if (joyxmove < 0) 
@@ -452,7 +454,9 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
 	    cmd->angleturn -= angleturn[tspeed]; 
 	if (is_gamekeydown(key_left))
 	    cmd->angleturn += angleturn[tspeed];
-#if !NO_USE_JOYSTICK
+#if  USE_ANALOG_JOYSTICK
+        cmd->angleturn -= (joyxmove * angleturn[1]) / 0x8000;
+#elif !NO_USE_JOYSTICK
 	if (joyxmove > 0)
 	    cmd->angleturn -= angleturn[tspeed]; 
 	if (joyxmove < 0) 
@@ -471,7 +475,9 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
 	forward -= forwardmove[speed]; 
     }
 
-#if !NO_USE_JOYSTICK
+#if  USE_ANALOG_JOYSTICK
+        forward -= (joyymove * forwardmove[1]) / 0x8000;
+#elif !NO_USE_JOYSTICK
     if (joyymove < 0) 
         forward += forwardmove[speed]; 
     if (joyymove > 0) 

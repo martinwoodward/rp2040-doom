@@ -467,8 +467,11 @@ target_compile_definitions(small_doom_common INTERFACE
         PICO_DEBUG_PIN_BASE=18
         PICO_DEBUG_PIN_COUNT=2
 )
-
-if(PICO_SDK)
+if(32BLIT_SDK)
+    target_compile_definitions(small_doom_common INTERFACE
+        USE_ANALOG_JOYSTICK=1
+    )
+elseif(PICO_SDK)
     target_compile_definitions(small_doom_common INTERFACE
         NO_USE_JOYSTICK=1
     )
