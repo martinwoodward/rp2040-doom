@@ -95,6 +95,9 @@ static int register_num = 0;
 static opl_timer_t timer1 = { 12500, 0, 0, 0 };
 static opl_timer_t timer2 = { 3125, 0, 0, 0 };
 
+#if PICO_ON_DEVICE
+static interp_hw_save_t saved_interp0, saved_interp1;
+#endif
 
 // Advance time by the specified number of samples, invoking any
 // callback functions as appropriate.
@@ -196,10 +199,14 @@ static void OPL_Blit_Callback(blit::AudioChannel &channel)
     buffer_len = 64;
 
 #if PICO_ON_DEVICE
-    // this callback comes from core1 or an irq, save the interp state
+    // this callback comes from an irq, save the interp state
+    // also save the interp state between these calls as the original pico code expects the reverse
+    // (audio interrupted by scanvideo)
     interp_hw_save_t saver0, saver1;
     interp_save(interp0, &saver0);
+    interp_restore(interp0, &saved_interp0);
     interp_save(interp1, &saver1);
+    interp_restore(interp1, &saved_interp1);
 #endif
 
     // Repeatedly call the OPL emulator update function until the buffer is
@@ -242,7 +249,9 @@ static void OPL_Blit_Callback(blit::AudioChannel &channel)
     }
 
 #if PICO_ON_DEVICE
+    interp_save(interp0, &saved_interp0);
     interp_restore(interp0, &saver0);
+    interp_save(interp1, &saved_interp1);
     interp_restore(interp1, &saver1);
 #endif
 }
