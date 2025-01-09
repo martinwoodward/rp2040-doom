@@ -15,6 +15,12 @@ if (32BLIT_SDK)
     target_include_directories(opl
                             INTERFACE "."
                             "${CMAKE_CURRENT_BINARY_DIR}/../")
+    if (PICO_ON_DEVICE)
+        target_sources(opl INTERFACE
+                ${CMAKE_CURRENT_LIST_DIR}/slot_render_pico.S
+        )
+        target_link_libraries(opl INTERFACE hardware_interp)
+    endif()
 elseif (PICO_SDK)
     add_library(opl INTERFACE)
     target_sources(opl INTERFACE

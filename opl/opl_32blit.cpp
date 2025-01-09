@@ -24,6 +24,10 @@
 
 #include "audio/audio.hpp"
 
+#if PICO_ON_DEVICE
+#include "hardware/interp.h"
+#endif
+
 extern "C"
 {
 #if USE_WOODY_OPL
@@ -191,6 +195,13 @@ static void OPL_Blit_Callback(blit::AudioChannel &channel)
     buffer = channel.wave_buffer;
     buffer_len = 64;
 
+#if PICO_ON_DEVICE
+    // this callback comes from core1 or an irq, save the interp state
+    interp_hw_save_t saver0, saver1;
+    interp_save(interp0, &saver0);
+    interp_save(interp1, &saver1);
+#endif
+
     // Repeatedly call the OPL emulator update function until the buffer is
     // full.
 
@@ -229,6 +240,11 @@ static void OPL_Blit_Callback(blit::AudioChannel &channel)
 
         AdvanceTime(nsamples);
     }
+
+#if PICO_ON_DEVICE
+    interp_restore(interp0, &saver0);
+    interp_restore(interp1, &saver1);
+#endif
 }
 
 static void opl_blit_Shutdown(void)
