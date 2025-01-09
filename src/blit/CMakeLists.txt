@@ -1,5 +1,6 @@
 add_library(common_32blit INTERFACE)
 target_sources(common_32blit INTERFACE
+    ${CMAKE_CURRENT_LIST_DIR}/i_blitsound.cpp
     ${CMAKE_CURRENT_LIST_DIR}/i_endoom.c
     ${CMAKE_CURRENT_LIST_DIR}/i_input.c
     ${CMAKE_CURRENT_LIST_DIR}/i_system.c

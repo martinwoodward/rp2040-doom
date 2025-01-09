@@ -89,6 +89,9 @@ extern sound_module_t sound_pcsound_module;
 extern music_module_t music_sdl_module;
 extern const music_module_t music_opl_module;
 extern music_module_t music_pack_module;
+#ifdef BUILD_32BLIT
+extern sound_module_t sound_blit_module;
+#endif
 #if PICO_BUILD
 extern sound_module_t sound_pico_module;
 #endif
@@ -124,7 +127,7 @@ static int snd_mport = 0;
 static sound_module_t *sound_modules[] =
 {
 #ifdef BUILD_32BLIT
-    //TODO
+    &sound_blit_module,
 #elif PICO_BUILD
     &sound_pico_module,
 #else

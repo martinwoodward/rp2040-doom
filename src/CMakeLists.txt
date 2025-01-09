@@ -338,7 +338,7 @@ target_compile_definitions(small_doom_common INTERFACE
         DOOM_CONST=1 # thread const thru lots of places
 
         SOUND_LOW_PASS=1
-        NUM_SOUND_CHANNELS=8 # sounds ok (actually that is how many are used by default)
+        #NUM_SOUND_CHANNELS=8 # sounds ok (actually that is how many are used by default)
 
         # functionality
         NO_USE_CHECKSUM=1
