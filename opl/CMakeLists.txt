@@ -6,7 +6,7 @@ if (32BLIT_SDK)
             ${CMAKE_CURRENT_LIST_DIR}/emu8950.c
             ${CMAKE_CURRENT_LIST_DIR}/slot_render.cpp
             ${CMAKE_CURRENT_LIST_DIR}/opl3.c
-            ${CMAKE_CURRENT_LIST_DIR}/opl_32blit.c
+            ${CMAKE_CURRENT_LIST_DIR}/opl_32blit.cpp
     )
     target_compile_options(opl INTERFACE -fms-extensions) # want OPL_SLOT_RENDER to be unnamed within OPL_SLOT
     target_compile_definitions(opl INTERFACE

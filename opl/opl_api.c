@@ -36,7 +36,9 @@ extern opl_driver_t opl_openbsd_driver;
 #ifdef _WIN32
 extern opl_driver_t opl_win32_driver;
 #endif
-#if PICO_BUILD
+#ifdef BUILD_32BLIT
+extern opl_driver_t opl_blit_driver;
+#elif PICO_BUILD
 extern opl_driver_t opl_pico_driver;
 #else
 extern opl_driver_t opl_sdl_driver;
@@ -54,6 +56,7 @@ static const opl_driver_t *drivers[] =
                 &opl_win32_driver,
 #endif
 #ifdef BUILD_32BLIT
+                &opl_blit_driver,
 #elif PICO_BUILD
                 &opl_pico_driver,
 #else
