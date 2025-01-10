@@ -137,12 +137,11 @@ static void AdvanceTime(unsigned int nsamples)
 }
 
 // Call the OPL emulator code to fill the specified buffer.
+static int32_t mix_buffer[64];
 
 static void FillBuffer(int16_t *buffer, unsigned int nsamples)
 {
     unsigned int i;
-
-    int32_t mix_buffer[64];
 
     // OPL output is generated into temporary buffer and then mixed
     // (to avoid overflows etc.)
