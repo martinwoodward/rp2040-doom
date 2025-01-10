@@ -497,6 +497,7 @@ function(add_doom_tiny SUFFIX RENDER_LIB)
         add_library(doom_tiny${SUFFIX} STATIC)
         target_link_libraries(doom_tiny${SUFFIX}_blit doom_tiny${SUFFIX})
         target_compile_definitions(doom_tiny${SUFFIX}_blit PRIVATE DOUBLE_BUFFERED_HIRES=0)
+        target_link_options(doom_tiny${SUFFIX}_blit PRIVATE ${BLIT_LINKER_OPTS})
 
         # ... then we need to manually link pico stuff
         if(32BLIT_PICO)

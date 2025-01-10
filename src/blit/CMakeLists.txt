@@ -19,3 +19,20 @@ target_include_directories(common_32blit INTERFACE
 )
 
 target_compile_definitions(common_32blit INTERFACE BUILD_32BLIT)
+
+if(32BLIT_HW OR 32BLIT_PICO)
+    # wrap file IO
+    set(BLIT_LINKER_OPTS
+        "LINKER:--wrap=fopen"
+        "LINKER:--wrap=fclose"
+        "LINKER:--wrap=fread"
+        "LINKER:--wrap=fwrite"
+        "LINKER:--wrap=fseek"
+        "LINKER:--wrap=ftell"
+        "LINKER:--wrap=remove"
+        "LINKER:--wrap=rename"
+        PARENT_SCOPE
+    )
+
+    target_sources(common_32blit INTERFACE file.cpp)
+endif()
