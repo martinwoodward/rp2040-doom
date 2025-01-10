@@ -68,21 +68,27 @@ void I_32BlitInput()
 	CheckButton(changed_buttons, blit::Button::DPAD_UP, KEY_UPARROW);
 	CheckButton(changed_buttons, blit::Button::DPAD_DOWN, KEY_DOWNARROW);
 
-	CheckButton(changed_buttons, blit::Button::A, KEY_ENTER);
-	CheckButton(changed_buttons, blit::Button::A, KEY_RCTRL); // bad idea?
-	CheckButton(changed_buttons, blit::Button::B, ' ');
 	CheckButton(changed_buttons, blit::Button::X, KEY_RSHIFT);
-	CheckButton(changed_buttons, blit::Button::Y, KEY_TAB);
+	CheckButton(changed_buttons, blit::Button::Y, KEY_TAB); // map toggle
 
 	CheckButton(changed_buttons, blit::Button::MENU, KEY_ESCAPE);
 
 	last_button_state = blit::buttons;
 
-	event.type = ev_joystick;
-	event.data1 = 0; //buttons?
-	event.data2 = blit::joystick.x * (INT16_MAX - 1);
-	event.data3 = blit::joystick.y * (INT16_MAX - 1);
-	D_PostEvent(&event);
+    if (I_GetTime() <= joywait)
+        return;
+
+    event.type = ev_joystick;
+    // joystick buttons
+    event.data1 = 0;
+    if(blit::buttons & blit::Button::A)
+        event.data1 |= 1 << 0; // "fire"
+    if(blit::buttons & blit::Button::B)
+        event.data1 |= 1 << 3; // "use"
+    
+    event.data2 = blit::joystick.x * (INT16_MAX - 1);
+    event.data3 = blit::joystick.y * (INT16_MAX - 1);
+    D_PostEvent(&event);
 }
 
 static bool done_init = false;
