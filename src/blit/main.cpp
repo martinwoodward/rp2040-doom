@@ -1,5 +1,6 @@
 
 #include "32blit.hpp"
+#include "engine/api_private.hpp"
 
 extern "C" {
 #include "d_event.h"
@@ -15,6 +16,7 @@ void I_32BlitStartRender();
 void I_32BlitEndRender(uint8_t *data, int w, int h);
 
 void I_32BlitInput();
+const char *I_32BlitSaveDir();
 }
 
 static uint32_t last_button_state = 0;
@@ -89,6 +91,11 @@ void I_32BlitInput()
     event.data2 = blit::joystick.x * (INT16_MAX - 1);
     event.data3 = blit::joystick.y * (INT16_MAX - 1);
     D_PostEvent(&event);
+}
+
+const char *I_32BlitSaveDir()
+{
+    return blit::api.get_save_path();
 }
 
 static bool done_init = false;

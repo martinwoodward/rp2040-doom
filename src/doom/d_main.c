@@ -1807,7 +1807,10 @@ void D_DoomMain (void)
     D_SetGameDescription();
 
 #if !NO_USE_SAVE && !NO_FILE_ACCESS
-#if DOOM_TINY && (!PICO_ON_DEVICE || defined(BUILD_32BLIT))
+#ifdef BUILD_32BLIT
+    extern const char *I_32BlitSaveDir();
+    savegamedir = I_32BlitSaveDir();
+#elif DOOM_TINY && !PICO_ON_DEVICE
     savegamedir = "./";
 #else
     savegamedir = M_GetSaveGameDir(D_SaveGameIWADName(gamemission));
