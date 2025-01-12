@@ -102,12 +102,12 @@ static channel_t channels[NUM_SOUND_CHANNELS];
 static boolean use_sfx_prefix;
 
 static inline bool is_channel_playing(int channel) {
-    return channels[channel].decompressed_size != 0;
+    return blit::channels[channel].adsr_phase != blit::ADSRPhase::OFF;
 }
 
 static inline void stop_channel(int channel) {
-    channels[channel].decompressed_size = 0;
     blit::channels[channel].off();
+    channels[channel].decompressed_size = 0;
 }
 
 static bool check_and_init_channel(int channel) {
@@ -323,48 +323,44 @@ static void RefillBuffer(blit::AudioChannel &blit_channel)
         return;
     }
 
-    if (is_channel_playing(ch))
-    {
-        channel_t *channel = &channels[ch];
-        assert(channel->decompressed_size);
-        unsigned offset_end = channel->decompressed_size * 65536;
-        assert(channel->offset < offset_end);
-        int16_t *samples = blit_channel.wave_buffer;
+    assert(channel->decompressed_size);
+    unsigned offset_end = channel->decompressed_size * 65536;
+    assert(channel->offset < offset_end);
+    int16_t *samples = blit_channel.wave_buffer;
 #if SOUND_LOW_PASS
-        int alpha256 = channel->alpha256;
-        int beta256 = 256 - alpha256;
-        int sample = channel->decompressed[channel->offset >> 16];
+    int alpha256 = channel->alpha256;
+    int beta256 = 256 - alpha256;
+    int sample = channel->decompressed[channel->offset >> 16];
 #endif
-        int s=0;
-        for(;s<64;s++)
-        {
+    int s=0;
+    for(;s<64;s++)
+    {
 #if !SOUND_LOW_PASS
-            int sample = channel->decompressed[channel->offset >> 16];
+        int sample = channel->decompressed[channel->offset >> 16];
 #else
-            // todo graham, note that since we are all at the same frequency (and it isn't the end
-            //  of the world anyway, we could do this across all channels at once)
-            sample = (beta256 * sample + alpha256 * channel->decompressed[channel->offset >> 16]) / 256;
+        // todo graham, note that since we are all at the same frequency (and it isn't the end
+        //  of the world anyway, we could do this across all channels at once)
+        sample = (beta256 * sample + alpha256 * channel->decompressed[channel->offset >> 16]) / 256;
 #endif
-            *samples++ = sample << 8;
-            channel->offset += channel->step;
+        *samples++ = sample << 8;
+        channel->offset += channel->step;
+        if (channel->offset >= offset_end)
+        {
+            channel->offset -= offset_end;
+            decompress_buffer(channel);
+            offset_end = channel->decompressed_size * 65536;
             if (channel->offset >= offset_end)
             {
-                channel->offset -= offset_end;
-                decompress_buffer(channel);
-                offset_end = channel->decompressed_size * 65536;
-                if (channel->offset >= offset_end)
-                {
-                    //stop_channel(ch);
-                    break;
-                }
+                //stop_channel(ch);
+                break;
             }
         }
-
-
-        // pad end
-        for(;s < 64; s++)
-            *samples++ = 0;
     }
+
+
+    // pad end
+    for(;s < 64; s++)
+        *samples++ = 0;
 }
 
 static void I_Blit_ShutdownSound(void)
