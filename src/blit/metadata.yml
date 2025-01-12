@@ -1,0 +1,10 @@
+title: DOOM
+description: It runs.
+author: "Many" # can't fit everyone in 16 chars
+version: v0.0.0
+icon:
+  file: icon.png
+splash:
+  file: splash.png
+category: port
+#url: https://github.com/Daft-Freak/32BlitDoom

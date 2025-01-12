@@ -494,6 +494,7 @@ function(add_doom_tiny SUFFIX RENDER_LIB)
     if(32BLIT_SDK)
         # workaround conflicting includes
         blit_executable(doom_tiny${SUFFIX}_blit blit/stub.c)
+        blit_metadata(doom_tiny${SUFFIX}_blit blit/metadata.yml)
         add_library(doom_tiny${SUFFIX} STATIC)
         target_link_libraries(doom_tiny${SUFFIX}_blit doom_tiny${SUFFIX})
         target_compile_definitions(doom_tiny${SUFFIX}_blit PRIVATE DOUBLE_BUFFERED_HIRES=0)
