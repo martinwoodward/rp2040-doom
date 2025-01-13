@@ -194,7 +194,9 @@ typedef uint8_t floor_ceiling_clip_t;
 
 #if PICO_ON_DEVICE
 #include <assert.h>
-#if !PICO_RP2350
+#if SHORTPTR_LATE
+#define SHORTPTR_BASE 0x20040000 // we have a framebuffer and other stuff
+#elif !PICO_RP2350
 #define SHORTPTR_BASE 0x20000000
 #else
 #define SHORTPTR_BASE 0x20030000
