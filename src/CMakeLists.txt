@@ -502,7 +502,15 @@ function(add_doom_tiny SUFFIX RENDER_LIB)
 
         # ... then we need to manually link pico stuff
         if(32BLIT_PICO)
-            target_link_libraries(doom_tiny${SUFFIX} PRIVATE pico_platform pico_sync hardware_dma hardware_interp)
+            target_link_libraries(doom_tiny${SUFFIX} PRIVATE
+                pico_binary_info_headers
+                pico_platform_headers
+                pico_runtime_headers
+                pico_sync_headers
+                hardware_dma_headers
+                hardware_gpio_headers
+                hardware_interp_headers
+            )
         endif()
     else()
         add_executable(doom_tiny${SUFFIX})

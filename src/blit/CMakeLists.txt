@@ -20,6 +20,8 @@ target_include_directories(common_32blit INTERFACE
 
 target_compile_definitions(common_32blit INTERFACE BUILD_32BLIT)
 
+target_link_libraries(common_32blit INTERFACE BlitEngine)
+
 if(32BLIT_HW OR 32BLIT_PICO)
     # wrap file IO
     set(BLIT_LINKER_OPTS

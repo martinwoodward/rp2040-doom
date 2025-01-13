@@ -39,7 +39,7 @@
 #include "r_data.h"
 #include <assert.h>
 
-#ifndef PICO_BUILD
+#if !defined(PICO_BUILD) || defined(BUILD_32BLIT)
 #define hard_assert assert
 #endif
 
