@@ -256,7 +256,7 @@ void V_DrawPatchList(const vpatchlist_t *patchlist) {
                         p += gap;
                         int len = *data++;
                         for (int i = 1; i < len; i += 2) {
-                            uint v = *data++;
+                            unsigned int v = *data++;
                             *p++ = pal[v & 0xf];
                             *p++ = pal[v >> 4];
                         }
@@ -276,13 +276,13 @@ void V_DrawPatchList(const vpatchlist_t *patchlist) {
                 for (; h > 0; h--, desttop += SCREENWIDTH) {
                     uint8_t *p = desttop;
                     for (int i = 0; i < w / 2; i++) {
-                        uint v = *data++;
+                        unsigned int v = *data++;
                         if (v & 0xf) p[0] = pal[v & 0xf];
                         if (v >> 4) p[1] = pal[v >> 4];
                         p += 2;
                     }
                     if (w & 1) {
-                        uint v = *data++;
+                        unsigned int v = *data++;
                         if (v & 0xf) p[0] = pal[v & 0xf];
                     }
                 }
@@ -291,13 +291,13 @@ void V_DrawPatchList(const vpatchlist_t *patchlist) {
                 for (; h > 0; h--, desttop += SCREENWIDTH) {
                     uint8_t *p = desttop;
                     for (int i = 0; i < w / 2; i++) {
-                        uint v = *data++;
+                        unsigned int v = *data++;
                         p[0] = pal[v & 0xf];
                         p[1] = pal[v >> 4];
                         p += 2;
                     }
                     if (w & 1) {
-                        uint v = *data++;
+                        unsigned int v = *data++;
                         p[0] = pal[v & 0xf];
                     }
                 }
@@ -314,7 +314,7 @@ void V_DrawPatchList(const vpatchlist_t *patchlist) {
                         p += gap;
                         int len = *data++;
                         for (int i = 3; i < len; i += 4) {
-                            uint v = *data++;
+                            unsigned int v = *data++;
                             v |= (*data++) << 8;
                             v |= (*data++) << 16;
                             *p++ = pal[v & 0x3f];
@@ -324,7 +324,7 @@ void V_DrawPatchList(const vpatchlist_t *patchlist) {
                         }
                         len &= 3;
                         if (len--) {
-                            uint v = *data++;
+                            unsigned int v = *data++;
                             *p++ = pal[v & 0x3f];
                             if (len--) {
                                 v >>= 6;

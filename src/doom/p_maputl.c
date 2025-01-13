@@ -648,25 +648,25 @@ P_BlockLinesIterator
     // handle 0
     if (!line_validcount_update_check(&lines[0], validcount) && !func(&lines[0])) return false;
 
-    uint row_header_offset = y * (2 + (bmapwidth + 7) / 8);
-    uint bmx = x / 8;
+    unsigned int row_header_offset = y * (2 + (bmapwidth + 7) / 8);
+    unsigned int bmx = x / 8;
 
     if (blockmap_whd[row_header_offset + 2 + bmx] & (1u << (x & 7))) {
-        uint data_offset = blockmap_whd[row_header_offset] | (blockmap_whd[row_header_offset + 1] << 8u);
-        uint cell_metadata_index = popcount8(blockmap_whd[row_header_offset + 2 + bmx] & ((1u << (x & 7)) - 1));
+        unsigned int data_offset = blockmap_whd[row_header_offset] | (blockmap_whd[row_header_offset + 1] << 8u);
+        unsigned int cell_metadata_index = popcount8(blockmap_whd[row_header_offset + 2 + bmx] & ((1u << (x & 7)) - 1));
         for(int xx = 0; xx < bmx; xx++) {
             cell_metadata_index += popcount8(blockmap_whd[row_header_offset + 2 + xx]);
         }
-        uint cell_metadata = blockmap_whd[data_offset + cell_metadata_index * 2] | (blockmap_whd[data_offset + cell_metadata_index * 2 + 1] << 8u);
+        unsigned int cell_metadata = blockmap_whd[data_offset + cell_metadata_index * 2] | (blockmap_whd[data_offset + cell_metadata_index * 2 + 1] << 8u);
         if ((cell_metadata & 0xf000) == 0xf000) {
             const line_t *line = &lines[cell_metadata & 0xfffu];
             if (!line_validcount_update_check(line, validcount) && !func(line)) return false;
         } else {
-            uint count = (cell_metadata >> 10u) + 1;
-            uint element_offset = data_offset + (cell_metadata & 0x3ff);
-            uint last = 0;
+            unsigned int count = (cell_metadata >> 10u) + 1;
+            unsigned int element_offset = data_offset + (cell_metadata & 0x3ff);
+            unsigned int last = 0;
             while (count--) {
-                uint b = blockmap_whd[element_offset++];
+                unsigned int b = blockmap_whd[element_offset++];
                 if (b & 0x80) {
                     b = ((b & 0x7f) << 8) + blockmap_whd[element_offset++];
                 }

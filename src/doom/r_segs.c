@@ -803,11 +803,11 @@ R_StoreWallRange
         rw_offset += side_textureoffset(sidedef) + seg_offset(curline);
 #if USE_WHD
         if (!seg_side(curline)) {
-            uint loff = linedef - lines;
-            uint min = 0;
-            uint max = numlinespecials;
+            unsigned int loff = linedef - lines;
+            unsigned int min = 0;
+            unsigned int max = numlinespecials;
             while (min < max) {
-                uint mid = (min + max) / 2;
+                unsigned int mid = (min + max) / 2;
                 if (linespecialoffsetlist[mid] <= loff) {
                     if (linespecialoffsetlist[mid] == loff) {
                         rw_offset += linespecialoffset << FRACBITS;
@@ -937,7 +937,7 @@ void pd_add_column2(pd_column_type type) {
 
         int xx = 0;
         do {
-            uint b=metadata[0];
+            unsigned int b=metadata[0];
             if (xx + 1 + (b&0x7f) > dc_source.col) break;
             xx = xx + 1 + (b&0x7f);
             metadata += 1 + 2 * (b>>7u);
@@ -947,7 +947,7 @@ void pd_add_column2(pd_column_type type) {
             if (pn != 0xff) { // todo this was here before zero patch columns, but i can't see why (it used to fall thru to regular add column type)
               // single patch column
                 assert(pn < pc);
-                uint pnum = patch_table[pn*2] | (patch_table[pn*2+1] << 8);
+                unsigned int pnum = patch_table[pn*2] | (patch_table[pn*2+1] << 8);
                 // note as pre R_GenerateLookup, a single patch column ignores the patch offsety
                 dc_source = make_drawcolumn(lookup_patch(pnum-firstspritelump), (uint8_t)(dc_source.col - metadata[2]));
             } else {
