@@ -11,9 +11,15 @@ extern "C" {
 
 #ifndef PICO_BUILD
 // stubs
+#ifndef __aligned
 #define __aligned(x) __attribute__((aligned(x)))
+#endif
+#ifndef __packed
 #define __packed __attribute__((packed))
+#endif
+#ifndef __noinline
 #define __noinline __attribute__((noinline))
+#endif
 #define panic_unsupported() panic("unsupported")
 #define panic I_Error
 

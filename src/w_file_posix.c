@@ -20,7 +20,7 @@
 #include "config.h"
 
 // todo split this out into a separate file w_fiel type
-#if !PICO_ON_DEVICE
+#if !PICO_ON_DEVICE && !TARGET_32BLIT_HW
 #ifdef HAVE_MMAP
 
 #include <errno.h>
@@ -177,7 +177,9 @@ wad_file_class_t posix_wad_file =
 
 #else
 
+#if PICO_BUILD
 #include "pico.h"
+#endif
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -206,7 +208,9 @@ static void W_POSIX_CloseFile(wad_file_t *wad) {
 
 size_t W_POSIX_Read(wad_file_t *wad, unsigned int offset,
                     void *buffer, size_t buffer_len) {
+#if PICO_BUILD
     panic_unsupported();
+#endif
 }
 
 wad_file_class_t posix_wad_file =

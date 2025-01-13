@@ -1212,7 +1212,7 @@ void V_DrawMouseSpeedBox(int speed)
 
     // If acceleration is used, draw a box that helps to calibrate the
     // threshold point.
-    if (mouse_threshold > 0 && fabs(mouse_acceleration - 1) > 0.01)
+    if (mouse_threshold > 0 && fabsf(mouse_acceleration - 1) > 0.01f)
     {
         draw_acceleration = true;
     }

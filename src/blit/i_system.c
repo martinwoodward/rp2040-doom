@@ -113,7 +113,7 @@ static byte *AutoAllocMemory(int *size, int default_ram, int min_ram)
         *size = 40 * 1024;
 #endif
 #else
-        *size = 256 * 1024;
+        *size = 128 * 1024;
 #endif
 #endif
 #endif
