@@ -531,7 +531,7 @@ function(add_doom_tiny SUFFIX RENDER_LIB)
 
     target_link_libraries(doom_tiny${SUFFIX} PRIVATE small_doom_common)
 
-    if (PICO_SDK)
+    if (PICO_SDK AND NOT 32BLIT_SDK)
         pico_set_float_implementation(doom_tiny${SUFFIX} none)
         pico_set_double_implementation(doom_tiny${SUFFIX} none)
         pico_add_extra_outputs(doom_tiny${SUFFIX})
@@ -605,7 +605,7 @@ function(add_doom_tiny SUFFIX RENDER_LIB)
 
         NO_IERROR=1
     )
-    if (PICO_SDK)
+    if (PICO_SDK AND NOT 32BLIT_SDK)
         target_compile_definitions(doom_tiny${SUFFIX} PRIVATE
             # SDK minimilization
             PICO_TIME_DEFAULT_ALARM_POOL_DISABLED=1
