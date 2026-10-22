@@ -21,6 +21,13 @@ const char *I_32BlitSaveDir();
 
 static uint32_t last_button_state = 0;
 
+// Home button: short press = use, long press = menu (escape)
+static const uint32_t home_long_press_ms = 600;
+static const uint32_t home_use_pulse_ms = 150;
+static uint32_t home_press_time = 0;
+static bool home_long_press = false;
+static uint32_t home_use_until = 0;
+
 static void add_appended_files()
 {
 #ifdef TARGET_32BLIT_HW
@@ -75,6 +82,31 @@ void I_32BlitInput()
 
 	CheckButton(changed_buttons, blit::Button::MENU, KEY_ESCAPE);
 
+	uint32_t now = blit::now();
+	if(changed_buttons & blit::Button::HOME)
+	{
+		if(blit::buttons & blit::Button::HOME)
+		{
+			home_press_time = now;
+			home_long_press = false;
+		}
+		else if(home_long_press)
+		{
+			event.type = ev_keyup;
+			event.data1 = KEY_ESCAPE;
+			D_PostEvent(&event);
+		}
+		else
+			home_use_until = now + home_use_pulse_ms;
+	}
+	else if((blit::buttons & blit::Button::HOME) && !home_long_press && now - home_press_time >= home_long_press_ms)
+	{
+		home_long_press = true;
+		event.type = ev_keydown;
+		event.data1 = KEY_ESCAPE;
+		D_PostEvent(&event);
+	}
+
 	last_button_state = blit::buttons;
 
     if (I_GetTime() <= joywait)
@@ -85,7 +117,7 @@ void I_32BlitInput()
     event.data1 = 0;
     if(blit::buttons & blit::Button::A)
         event.data1 |= 1 << 0; // "fire"
-    if(blit::buttons & blit::Button::B)
+    if((blit::buttons & blit::Button::B) || int32_t(home_use_until - now) > 0)
         event.data1 |= 1 << 3; // "use"
     
     event.data2 = blit::joystick.x * (INT16_MAX - 1);
