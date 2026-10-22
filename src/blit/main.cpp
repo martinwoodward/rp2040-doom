@@ -19,6 +19,16 @@ void I_32BlitInput();
 const char *I_32BlitSaveDir();
 }
 
+#ifdef DOOM_HANG_DEBUG
+void hang_debug_init();
+bool hang_debug_has_report();
+void hang_debug_beat(uint32_t phase);
+void hang_debug_render();
+#define HANG_BEAT(x) hang_debug_beat(x)
+#else
+#define HANG_BEAT(x)
+#endif
+
 static uint32_t last_button_state = 0;
 
 // Home button: short press = use, long press = menu (escape)
@@ -138,10 +148,17 @@ void init()
     blit::set_screen_mode(blit::ScreenMode::hires, blit::PixelFormat::RGB565);
 
     add_appended_files();
+#ifdef DOOM_HANG_DEBUG
+    hang_debug_init();
+#endif
 }
 
 void update(uint32_t time)
 {
+#ifdef DOOM_HANG_DEBUG
+    if(hang_debug_has_report())
+        return;
+#endif
     if(!done_init) {
         D_DoomMain();
         done_init = true;
@@ -154,20 +171,31 @@ void update(uint32_t time)
     if(wipestate)
         return;
 
+    HANG_BEAT(0x10 | (gamestate << 8));
     TryRunTics();
+    HANG_BEAT(0x11 | (gamestate << 8));
 	S_UpdateSounds(players[consoleplayer].mo);
+    HANG_BEAT(0x12 | (gamestate << 8));
 }
 
 void render(uint32_t time)
 {
     using namespace blit;
 
+#ifdef DOOM_HANG_DEBUG
+    if(hang_debug_has_report()) {
+        hang_debug_render();
+        return;
+    }
+#endif
     if(!done_init)
         return;
 
+    HANG_BEAT(0x20 | (gamestate << 8));
     I_32BlitStartRender();
-
+    HANG_BEAT(0x21 | (gamestate << 8));
     D_Display();
-
+    HANG_BEAT(0x22 | (gamestate << 8));
     I_32BlitEndRender(screen.data, screen.bounds.w, screen.bounds.h);
+    HANG_BEAT(0x23 | (gamestate << 8));
 }

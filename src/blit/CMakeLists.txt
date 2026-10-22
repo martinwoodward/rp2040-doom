@@ -12,6 +12,12 @@ target_sources(common_32blit INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/main.cpp
 )
 
+option(DOOM_HANG_DEBUG "Catch hard faults/hangs and report them on the next boot" OFF)
+if(DOOM_HANG_DEBUG)
+    target_sources(common_32blit INTERFACE ${CMAKE_CURRENT_LIST_DIR}/hang_debug.cpp)
+    target_compile_definitions(common_32blit INTERFACE DOOM_HANG_DEBUG)
+endif()
+
 target_include_directories(common_32blit INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/..
